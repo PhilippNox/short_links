@@ -32,24 +32,35 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 		# step 1 - check url
 		url_is_good, url, check_msg = UrlChecker.check(url)
 		if url_is_good is False:
-			return schm.Report(ok=False, msg=check_msg, original_url=url, cookie=cookie)
+			return schm.ReportAdd(ok=False, msg=check_msg, original_url=url, cookie=cookie)
 
 		# step 2 - generate a code
 		rnd = RndCode.get_rnd()
 		logger.debug(f'gen_code - {rnd}')
 		db_out = await crud_rdir.create_redirect(code=rnd, link=url, cookie=cookie)
-		return schm.Report(ok=True, msg='ok', original_url=url, cookie=cookie)
+		return schm.ReportAdd(ok=True, msg='ok', original_url=url, cookie=cookie)
 
 	except Exception as e:
 		err_msg = "Sorry, We have a problem here"
 		logger.error(f"{err_msg} - {cookie}")
 		logger.error(e)
-		return schm.Report(
+		return schm.ReportAdd(
 			ok=False,
 			msg=err_msg,
 			original_url=url,
 			cookie=cookie
 		)
+
+
+# http://localhost:8000/get/Xn87
+
+@app.get("/get/{code}")
+async def get_link(code: str):
+	try:
+		out = await crud_rdir.get_redirect_by_code(code)
+		return schm.ReportLink(ok=True, link=out)
+	except Exception as e:
+		return schm.ReportLink(ok=False)
 
 
 @app.on_event("startup")

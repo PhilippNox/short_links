@@ -5,6 +5,7 @@ import app.schemas as schm
 from app.db.core_db import database
 
 from typing import Optional, Dict, Any
+import sqlalchemy as sa
 import asyncpg
 
 
@@ -29,3 +30,10 @@ async def create_redirect(
 	except Exception as e:
 		logger.warning(f"crud_redirect - {cookie} - {code} - ❌💽 - Exception [{type(e)}]: {e}")
 		return schm.InsetDB.ERR
+
+
+async def get_redirect_by_code(code: str) -> str:
+	query = sa.select([md.redirect.c.link]).where(md.redirect.c.code == code)
+	out = await database.fetch_one(query=query)
+	return out['link']
+
