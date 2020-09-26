@@ -5,6 +5,8 @@ import app.schemas as schm
 from app.config import settings
 from app.url_checker import UrlChecker
 from app.rnd_code import RndCode
+from app.db.core_db import database
+import app.db.crud_redirect as crud_rdir
 
 from typing import Optional
 import logging
@@ -35,6 +37,7 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 		# step 2 - generate a code
 		rnd = RndCode.get_rnd()
 		logger.debug(f'gen_code - {rnd}')
+		db_out = await crud_rdir.create_redirect(code=rnd, link=url, cookie=cookie)
 		return schm.Report(ok=True, msg='ok', original_url=url, cookie=cookie)
 
 	except Exception as e:
@@ -53,8 +56,9 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 async def startup_event():
 	if settings.DEBUG:
 		logger.setLevel(logging.DEBUG)
+	await database.connect()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-	pass
+	await database.disconnect()
