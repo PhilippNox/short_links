@@ -7,6 +7,7 @@ from app.url_checker import UrlChecker
 from app.rnd_code import RndCode
 from app.db.core_db import database
 import app.db.crud_redirect as crud_rdir
+from app.rds.rdsopr import RdsOpr
 
 from typing import Optional
 import logging
@@ -68,8 +69,10 @@ async def startup_event():
 	if settings.DEBUG:
 		logger.setLevel(logging.DEBUG)
 	await database.connect()
+	await RdsOpr.start()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
 	await database.disconnect()
+	await RdsOpr.stop()

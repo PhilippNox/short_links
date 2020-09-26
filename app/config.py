@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic import BaseSettings, RedisDsn
 
 
 class Settings(BaseSettings):
@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 	DB_USER:		str
 	DB_PASSWORD:	str
 	DB_DATABASE:	str
+	REDIS_DNS:		RedisDsn
 
 	class Config:
 		env_file = '.env'
