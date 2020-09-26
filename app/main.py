@@ -4,6 +4,7 @@ from fastapi.logger import logger
 import app.schemas as schm
 from app.config import settings
 from app.url_checker import UrlChecker
+from app.rnd_code import RndCode
 
 from typing import Optional
 import logging
@@ -31,6 +32,9 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 		if url_is_good is False:
 			return schm.Report(ok=False, msg=check_msg, original_url=url, cookie=cookie)
 
+		# step 2 - generate a code
+		rnd = RndCode.get_rnd()
+		logger.debug(f'gen_code - {rnd}')
 		return schm.Report(ok=True, msg='ok', original_url=url, cookie=cookie)
 
 	except Exception as e:
