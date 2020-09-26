@@ -1,11 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Cookie, Response
 from fastapi.logger import logger
 
 import app.schemas as schm
 from app.config import settings
 
+from typing import Optional
 import logging
-
+import uuid
 
 app = FastAPI()
 
@@ -17,18 +18,24 @@ app = FastAPI()
 # http://localhost:8000/?url=tg://ok.com
 
 @app.get("/")
-async def short_link(url: str):
+async def short_link(url: str, response: Response, cookie: Optional[str] = Cookie(None)):
 	try:
-		return schm.Report(ok=True, msg='ok', original_url=url)
+		# step 0 - cookie
+		if cookie is None:
+			cookie = str(uuid.uuid4())
+			response.set_cookie(key="cookie", value=cookie)
+
+		return schm.Report(ok=True, msg='ok', original_url=url, cookie=cookie)
 
 	except Exception as e:
 		err_msg = "Sorry, We have a problem here"
-		logger.error(f"{err_msg}")
+		logger.error(f"{err_msg} - {cookie}")
 		logger.error(e)
 		return schm.Report(
 			ok=False,
 			msg=err_msg,
 			original_url=url,
+			cookie=cookie
 		)
 
 
