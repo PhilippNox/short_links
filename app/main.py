@@ -7,21 +7,19 @@ from app.config import settings
 from app.url_checker import UrlChecker
 from app.rnd_code import RndCode
 from app.db.core_db import database
-import app.db.crud_redirect as crud_rdir
 from app.rds.rdsopr import RdsOpr
-from app.linker import TempBag, Linker
+from app.linker import Linker
 
 from typing import Optional
 import logging
 import uuid
-import random
 
 app = FastAPI()
+host = settings.HOST
 
-test_bag = TempBag('test_bag', 100)
-
-# http://127.0.0.1:8000/?url=www.google.com
+# http://127.0.0.1:8000/?url=www.ya.ru
 # http://127.0.0.1:8000/?url=tg://resolve?domain=techsparks
+# http://127.0.0.1:8000/?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
 
 
 @app.get("/")
@@ -30,12 +28,12 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 		# step 0 - cookie
 		if cookie is None:
 			cookie = str(uuid.uuid4())
-			response.set_cookie(key="cookie", value=cookie)
+			response.set_cookie(key="cookie", value=cookie, max_age=315576000)
 
 		# step 1 - check url
 		url_is_good, url, check_msg = UrlChecker.check(url)
 		if url_is_good is False:
-			return schm.ReportAdd(ok=False, msg=check_msg, original_url=url, cookie=cookie)
+			return schm.ReportAdd(ok=False, msg=check_msg, original_url=url)
 
 		# step 2 - generate a code
 		reject = dict()
@@ -43,21 +41,17 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 			rnd = RndCode.get_rnd()
 			rjc = await Linker.add_redirect(code=rnd, link=url, cookie=cookie, how_created=reject)
 			if rjc is schm.LinkerReject.PASS:
-				return schm.ReportAdd(ok=True, msg='ok', original_url=url, cookie=cookie)
+				return schm.ReportAdd(
+					ok=True, msg='ok', original_url=url, redirect_url=f'{host}{rnd}')
 			reject[rjc] = reject.get(rjc, 0) + 1
 		logger.warning(f"REJECT_LIM - {cookie} - {url}")
-		return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, original_url=url, cookie=cookie)
+		return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, original_url=url)
 
 	except Exception as e:
 		err_msg = settings.MSG_FAIL
 		logger.error(f"{err_msg} - {cookie}")
 		logger.error(e)
-		return schm.ReportAdd(
-			ok=False,
-			msg=err_msg,
-			original_url=url,
-			cookie=cookie
-		)
+		return schm.ReportAdd(ok=False, msg=err_msg, original_url=url)
 
 
 # http://localhost:8000/get/Xn87

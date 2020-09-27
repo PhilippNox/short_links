@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 	DEFAULT_SCHEMA: str
 	CODE_BASE:		str
 	CODE_LEN:		int
+	HOST:			str
 	DB_HOST:		str
 	DB_PORT:		str
 	DB_USER:		str

@@ -5,9 +5,9 @@ from typing import Optional
 
 class ReportAdd(BaseModel):
 	ok: bool
-	msg: str = ''
+	msg: Optional[str] = None
 	original_url: str
-	cookie: str
+	redirect_url: Optional[str] = None
 
 
 class ReportLink(BaseModel):
