@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Cookie, Response
 from fastapi.logger import logger
+from fastapi.responses import RedirectResponse
 
 import app.schemas as schm
 from app.config import settings
@@ -20,10 +21,7 @@ app = FastAPI()
 test_bag = TempBag('test_bag', 100)
 
 # http://127.0.0.1:8000/?url=www.google.com
-# http://127.0.0.1:8000/?url=https://www.google.com/
-# http://127.0.0.1:8000/?url=https://xn-----glccfbc4ebdaxw3bzag.xn--p1ai/
-# http://localhost:8000/?url=https://s.c12.d:123:123:123
-# http://localhost:8000/?url=tg://ok.com
+# http://127.0.0.1:8000/?url=tg://resolve?domain=techsparks
 
 
 @app.get("/")
@@ -72,6 +70,21 @@ async def get_link(code: str):
 		if link is None:
 			return schm.ReportLink(ok=False)
 		return schm.ReportLink(ok=True, link=link)
+	except Exception as e:
+		logger.warning(f"get_link - {code} - Exception [{type(e)}]: {e}")
+		return schm.ReportLink(ok=False)
+
+
+# http://localhost:8000/Xn87
+
+@app.get("/{code}")
+async def get_link(code: str):
+	try:
+		link, src = await Linker.get_link_or_none(code)
+		logger.debug(f'Linker return - {link} - {src}')
+		if link is None:
+			return schm.ReportLink(ok=False)
+		return RedirectResponse(link)
 	except Exception as e:
 		logger.warning(f"get_link - {code} - Exception [{type(e)}]: {e}")
 		return schm.ReportLink(ok=False)
