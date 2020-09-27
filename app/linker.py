@@ -32,9 +32,9 @@ class TempBag:
 
 class Linker:
 
-	bag_nolink = TempBag('bag_nolink', 100)
-	bag_reject = TempBag('bag_reject', 100)
-	ttl = 100
+	bag_nolink = TempBag('bag_nolink', settings.RDS_TTL_NOLINK)
+	bag_reject = TempBag('bag_reject', settings.RDS_TTL_REJECT)
+	cache_ttl = settings.RDS_TTL_CACHE
 
 	@classmethod
 	async def get_link_or_none(cls, code: str) -> Tuple[Optional[str], schm.LinkerGetSrc]:
@@ -45,7 +45,7 @@ class Linker:
 			return rds_val, schm.LinkerGetSrc.RDS
 		try:
 			db_val = await crud_rdir.get_redirect_by_code(code)
-			await RdsOpr.raw().setex(code, cls.ttl, db_val)
+			await RdsOpr.raw().setex(code, cls.cache_ttl, db_val)
 			return db_val, schm.LinkerGetSrc.DB_OK
 		except TypeError as e:
 			await cls.bag_nolink.add(code)
@@ -55,3 +55,26 @@ class Linker:
 			await cls.bag_nolink.add(code)
 			return None, schm.LinkerGetSrc.DB_ERR
 
+	@classmethod
+	async def add_redirect(
+			cls,
+			code: str,
+			link: str,
+			cookie: Optional[str] = None,
+			how_created: Optional[Dict[schm.LinkerReject, Any]] = None
+	) -> schm.LinkerReject:
+		if await cls.bag_reject.has(code):
+			return schm.LinkerReject.RDS
+		db = await crud_rdir.create_redirect(
+			code=code,
+			link=link,
+			cookie=cookie,
+			how_created=how_created)
+		if db is schm.InsetDB.OK:
+			await cls.bag_nolink.rem(code)
+			await cls.bag_reject.rem(code)
+			await RdsOpr.raw().setex(code, cls.cache_ttl, link)
+			return schm.LinkerReject.PASS
+		else:
+			await cls.bag_reject.add(code)
+			return schm.LinkerReject.DB

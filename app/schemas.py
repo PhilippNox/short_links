@@ -26,3 +26,8 @@ class LinkerGetSrc(Enum):
 	DB_OK = auto()
 	DB_ERR = auto()
 
+
+class LinkerReject(Enum):
+	RDS = auto()
+	DB = auto()
+	PASS = auto()

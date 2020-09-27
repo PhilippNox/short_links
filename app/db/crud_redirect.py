@@ -13,7 +13,7 @@ async def create_redirect(
 		code: str,
 		link: str,
 		cookie: Optional[str] = None,
-		how_created: Optional[Dict[str, Any]] = None
+		how_created: Optional[Dict[schm.LinkerReject, Any]] = None
 ) -> schm.InsetDB:
 	try:
 		query = md.redirect.insert().values(

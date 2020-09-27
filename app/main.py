@@ -40,13 +40,18 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 			return schm.ReportAdd(ok=False, msg=check_msg, original_url=url, cookie=cookie)
 
 		# step 2 - generate a code
-		rnd = RndCode.get_rnd()
-		logger.debug(f'gen_code - {rnd}')
-		db_out = await crud_rdir.create_redirect(code=rnd, link=url, cookie=cookie)
-		return schm.ReportAdd(ok=True, msg='ok', original_url=url, cookie=cookie)
+		reject = dict()
+		for _ in range(settings.REJECT_LIM):
+			rnd = RndCode.get_rnd()
+			rjc = await Linker.add_redirect(code=rnd, link=url, cookie=cookie, how_created=reject)
+			if rjc is schm.LinkerReject.PASS:
+				return schm.ReportAdd(ok=True, msg='ok', original_url=url, cookie=cookie)
+			reject[rjc] = reject.get(rjc, 0) + 1
+		logger.warning(f"REJECT_LIM - {cookie} - {url}")
+		return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, original_url=url, cookie=cookie)
 
 	except Exception as e:
-		err_msg = "Sorry, We have a problem here"
+		err_msg = settings.MSG_FAIL
 		logger.error(f"{err_msg} - {cookie}")
 		logger.error(e)
 		return schm.ReportAdd(
