@@ -8,19 +8,23 @@ from app.rnd_code import RndCode
 from app.db.core_db import database
 import app.db.crud_redirect as crud_rdir
 from app.rds.rdsopr import RdsOpr
+from app.linker import TempBag, Linker
 
 from typing import Optional
 import logging
 import uuid
+import random
 
 app = FastAPI()
 
+test_bag = TempBag('test_bag', 100)
 
 # http://127.0.0.1:8000/?url=www.google.com
 # http://127.0.0.1:8000/?url=https://www.google.com/
 # http://127.0.0.1:8000/?url=https://xn-----glccfbc4ebdaxw3bzag.xn--p1ai/
 # http://localhost:8000/?url=https://s.c12.d:123:123:123
 # http://localhost:8000/?url=tg://ok.com
+
 
 @app.get("/")
 async def short_link(url: str, response: Response, cookie: Optional[str] = Cookie(None)):
@@ -58,9 +62,13 @@ async def short_link(url: str, response: Response, cookie: Optional[str] = Cooki
 @app.get("/get/{code}")
 async def get_link(code: str):
 	try:
-		out = await crud_rdir.get_redirect_by_code(code)
-		return schm.ReportLink(ok=True, link=out)
+		link, src = await Linker.get_link_or_none(code)
+		logger.debug(f'Linker return - {link} - {src}')
+		if link is None:
+			return schm.ReportLink(ok=False)
+		return schm.ReportLink(ok=True, link=link)
 	except Exception as e:
+		logger.warning(f"get_link - {code} - Exception [{type(e)}]: {e}")
 		return schm.ReportLink(ok=False)
 
 

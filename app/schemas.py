@@ -19,3 +19,10 @@ class InsetDB(Enum):
 	OK = auto()
 	UNC = auto()
 	ERR = auto()
+
+
+class LinkerGetSrc(Enum):
+	RDS = auto()
+	DB_OK = auto()
+	DB_ERR = auto()
+
