@@ -25,7 +25,8 @@ endpoint_set = '/set/'
 
 @app.get(endpoint_set + "{foo:path}")
 async def short_link(request: Request, response: Response, cookie: Optional[str] = Cookie(None)):
-	url = str(request.url).split(endpoint_set)[-1]
+	url = str(request.url)
+	url = url[url.find(endpoint_set) + len(endpoint_set):]
 	try:
 		# step 0 - cookie
 		if cookie is None:
