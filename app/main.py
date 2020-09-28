@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Cookie, Response
+from fastapi import FastAPI, Cookie, Response, Request
 from fastapi.logger import logger
 from fastapi.responses import RedirectResponse
 
@@ -16,14 +16,16 @@ import uuid
 
 app = FastAPI()
 host = settings.HOST
-
-# http://127.0.0.1:8000/?url=www.ya.ru
-# http://127.0.0.1:8000/?url=tg://resolve?domain=techsparks
-# http://127.0.0.1:8000/?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
+endpoint_set = '/set/'
 
 
-@app.get("/")
-async def short_link(url: str, response: Response, cookie: Optional[str] = Cookie(None)):
+# http://127.0.0.1:8000/set/www.ya.ru
+# http://127.0.0.1:8000/set/tg://resolve?domain=techsparks
+# http://127.0.0.1:8000/set/https://www.youtube.com/watch?v=dQw4w9WgXcQ
+
+@app.get(endpoint_set + "{foo:path}")
+async def short_link(request: Request, response: Response, cookie: Optional[str] = Cookie(None)):
+	url = str(request.url).split(endpoint_set)[-1]
 	try:
 		# step 0 - cookie
 		if cookie is None:

@@ -53,8 +53,8 @@ https://fastapi.tiangolo.com/#installation
 
 For example a 🔸target_url🔸 is https://www.youtube.com/watch?v=dQw4w9WgXcQ
 
-* To create short link do GET request with your browser or curl like this http://127.0.0.1:8000/?url=🔸target_url🔸  
-    * Ex.: http://127.0.0.1:8000/?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ  
+* To create short link do GET request with your browser or curl like this http://127.0.0.1:8000/set/🔸target_url🔸  
+    * Ex.: http://127.0.0.1:8000/set/https://www.youtube.com/watch?v=dQw4w9WgXcQ  
     * As response you will get something like this: 
     ```json
     {
