@@ -1,13 +1,14 @@
 
 from fastapi.logger import logger
 
-from app.rds.rdsopr import RdsOpr
 from app.config import settings
+from app.rds.rdsopr import RdsOpr
+from app.rnd_code import RndCode
 import app.db.crud_redirect as crud_rdir
 import app.schemas as schm
 
-import time
 from typing import Optional, Tuple, Dict, Any
+import time
 
 
 class TempBag:
@@ -78,3 +79,15 @@ class Linker:
 		else:
 			await cls.bag_reject.add(code)
 			return schm.LinkerReject.DB
+
+	@classmethod
+	async def gen_code_add_link(cls, url: str, cookie: str) -> Tuple[bool, Optional[str]]:
+		reject = dict()  # reject history
+		for _ in range(settings.REJECT_LIM):
+			rnd = RndCode.get_rnd()
+			rjc = await Linker.add_redirect(code=rnd, link=url, cookie=cookie, how_created=reject)
+			if rjc is schm.LinkerReject.PASS:
+				return True, rnd
+			reject[rjc] = reject.get(rjc, 0) + 1
+		logger.warning(f"REJECT_LIM - {cookie} - {url}")
+		return False, None

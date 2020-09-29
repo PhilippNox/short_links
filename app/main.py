@@ -5,7 +5,6 @@ from fastapi.responses import RedirectResponse
 import app.schemas as schm
 from app.config import settings
 from app.url_logic import UrlLogic
-from app.rnd_code import RndCode
 from app.db.core_db import database
 from app.rds.rdsopr import RdsOpr
 from app.linker import Linker
@@ -35,21 +34,17 @@ async def short_link(request: Request, response: Response, cookie: Optional[str]
 	try:
 		# step 1 - check and add cookie
 		process_cookie(response, cookie)
+
 		# step 2 - check url
 		url_is_good, check_msg = UrlLogic.check(url, schema)
 		if url_is_good is False:
 			return schm.ReportAdd(ok=False, msg=check_msg, original_url=url)
+
 		# step 3 - generate a code
-		reject = dict()
-		for _ in range(settings.REJECT_LIM):
-			rnd = RndCode.get_rnd()
-			rjc = await Linker.add_redirect(code=rnd, link=url, cookie=cookie, how_created=reject)
-			if rjc is schm.LinkerReject.PASS:
-				return schm.ReportAdd(
-					ok=True, msg='ok', original_url=url, redirect_url=f'{host}{rnd}')
-			reject[rjc] = reject.get(rjc, 0) + 1
-		logger.warning(f"REJECT_LIM - {cookie} - {url}")
-		return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, original_url=url)
+		added, code = await Linker.gen_code_add_link(url, cookie)
+		if added is False:
+			return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, original_url=url)
+		return schm.ReportAdd(ok=True, msg='ok', original_url=url, redirect_url=f'{host}{code}')
 
 	except Exception as e:
 		err_msg = settings.MSG_FAIL
