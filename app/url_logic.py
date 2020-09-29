@@ -14,21 +14,19 @@ class CheckUrl(BaseModel):
 class UrlLogic:
 
 	default_schema = settings.DEFAULT_SCHEMA
-	endpoint_set = settings.ENDPOINT_SET
 	allowed_schemas = ['http://', 'https://', 'tg://', 'trello://']
 	re_schema = r'^[a-zA-Z]+:\/\/'
 
 	@classmethod
-	def parser_url(cls, request: Request) -> Tuple[str, str]:
-		url = str(request.url)
-		url = url[url.find(cls.endpoint_set) + len(cls.endpoint_set):]
-		re_out = re.match(cls.re_schema, url)
+	def parser_url(cls, full_url: str, endpoint: str) -> Tuple[str, str]:
+		trg = full_url[full_url.find(endpoint) + len(endpoint) + 1:]
+		re_out = re.match(cls.re_schema, trg)
 		if re_out is not None:
 			schema = re_out.group(0)
 		else:
 			schema = settings.DEFAULT_SCHEMA
-			url = ''.join([settings.DEFAULT_SCHEMA, url])
-		return url, schema
+			trg = ''.join([settings.DEFAULT_SCHEMA, trg])
+		return trg, schema
 
 	@classmethod
 	def check(cls, url: str, schema: str) -> Tuple[bool, str]:
