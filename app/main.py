@@ -16,6 +16,7 @@ import uuid
 app = FastAPI()
 host = settings.HOST
 endpoint_set = '/set'
+endpoint_with = '/set_with'
 
 # http://127.0.0.1:8000/set/www.ya.ru
 # http://127.0.0.1:8000/set/tg://resolve?domain=techsparks
@@ -30,9 +31,10 @@ def process_cookie(response: Response, cookie: Optional[str] = Cookie(None)):
 
 @app.get(endpoint_set + "/{foo:path}")
 async def set_link(rqt: Request, rsp: Response, cookie: Optional[str] = Cookie(None)):
-	# step 0 - get url
-	url, schema = UrlLogic.parser_url(full_url=str(rqt.url), endpoint=endpoint_set)
 	try:
+		# step 0 - get url
+		url, schema = UrlLogic.parser_url(full_url=str(rqt.url), endpoint=endpoint_set)
+
 		# step 1 - check and add cookie
 		process_cookie(rsp, cookie)
 
@@ -51,6 +53,39 @@ async def set_link(rqt: Request, rsp: Response, cookie: Optional[str] = Cookie(N
 			request_url=str(rqt.url),
 			target_url=url,
 			redirect_url=f'{host}{code}'
+		)
+
+	except Exception as e:
+		err_msg = settings.MSG_FAIL
+		logger.error(f"{err_msg} - {cookie}")
+		logger.error(e)
+		return schm.ReportAdd(ok=False, msg=err_msg, request_url=str(rqt.url))
+
+
+@app.get(endpoint_with + "/{given}/{foo:path}")
+async def set_with(given: str, rqt: Request, rsp: Response, cookie: Optional[str] = Cookie(None)):
+	try:
+		# step 0 - get url
+		url, schema = UrlLogic.parser_url(full_url=str(rqt.url), endpoint=endpoint_with, name=given)
+
+		# step 1 - check and add cookie
+		process_cookie(rsp, cookie)
+
+		# step 2 - check url
+		url_is_good, check_msg = UrlLogic.check(url, schema)
+		if url_is_good is False:
+			return schm.ReportAdd(ok=False, msg=check_msg, request_url=str(rqt.url))
+
+		# step 3 - try to add
+		rlt = await Linker.add_redirect(code=given, link=url, cookie=cookie)
+		if rlt is not schm.LinkerReject.PASS:
+			return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, request_url=str(rqt.url))
+		return schm.ReportAdd(
+			ok=True,
+			msg='ok',
+			request_url=str(rqt.url),
+			target_url=url,
+			redirect_url=f'{host}{given}'
 		)
 
 	except Exception as e:
