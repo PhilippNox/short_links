@@ -4,15 +4,16 @@ from typing import Optional
 
 
 class ReportAdd(BaseModel):
-	ok: bool
-	msg: Optional[str] = None
-	original_url: str
-	redirect_url: Optional[str] = None
+	ok: 			bool
+	msg: 			Optional[str] = None
+	request_url: 	str
+	target_url: 	Optional[str] = None
+	redirect_url: 	Optional[str] = None
 
 
 class ReportLink(BaseModel):
-	ok: bool
-	link: Optional[str] = None
+	ok: 			bool
+	link: 			Optional[str] = None
 
 
 class InsetDB(Enum):

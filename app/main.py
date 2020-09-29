@@ -15,11 +15,13 @@ import uuid
 
 app = FastAPI()
 host = settings.HOST
-
+endpoint_set = '/set'
+endpoint_with = '/set_with'
 
 # http://127.0.0.1:8000/set/www.ya.ru
 # http://127.0.0.1:8000/set/tg://resolve?domain=techsparks
 # http://127.0.0.1:8000/set/https://www.youtube.com/watch?v=dQw4w9WgXcQ
+
 
 def process_cookie(response: Response, cookie: Optional[str] = Cookie(None)):
 	if cookie is None:
@@ -27,30 +29,70 @@ def process_cookie(response: Response, cookie: Optional[str] = Cookie(None)):
 		response.set_cookie(key="cookie", value=cookie, max_age=315576000)
 
 
-@app.get(settings.ENDPOINT_SET + "{foo:path}")
-async def short_link(request: Request, response: Response, cookie: Optional[str] = Cookie(None)):
-	# step 0 - get url
-	url, schema = UrlLogic.parser_url(request)
+@app.get(endpoint_set + "/{foo:path}")
+async def set_link(rqt: Request, rsp: Response, cookie: Optional[str] = Cookie(None)):
 	try:
+		# step 0 - get url
+		url, schema = UrlLogic.parser_url(full_url=str(rqt.url), endpoint=endpoint_set)
+
 		# step 1 - check and add cookie
-		process_cookie(response, cookie)
+		process_cookie(rsp, cookie)
 
 		# step 2 - check url
 		url_is_good, check_msg = UrlLogic.check(url, schema)
 		if url_is_good is False:
-			return schm.ReportAdd(ok=False, msg=check_msg, original_url=url)
+			return schm.ReportAdd(ok=False, msg=check_msg, request_url=str(rqt.url))
 
 		# step 3 - generate a code
 		added, code = await Linker.gen_code_add_link(url, cookie)
 		if added is False:
-			return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, original_url=url)
-		return schm.ReportAdd(ok=True, msg='ok', original_url=url, redirect_url=f'{host}{code}')
+			return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, request_url=str(rqt.url))
+		return schm.ReportAdd(
+			ok=True,
+			msg='ok',
+			request_url=str(rqt.url),
+			target_url=url,
+			redirect_url=f'{host}{code}'
+		)
 
 	except Exception as e:
 		err_msg = settings.MSG_FAIL
 		logger.error(f"{err_msg} - {cookie}")
 		logger.error(e)
-		return schm.ReportAdd(ok=False, msg=err_msg, original_url=url)
+		return schm.ReportAdd(ok=False, msg=err_msg, request_url=str(rqt.url))
+
+
+@app.get(endpoint_with + "/{given}/{foo:path}")
+async def set_with(given: str, rqt: Request, rsp: Response, cookie: Optional[str] = Cookie(None)):
+	try:
+		# step 0 - get url
+		url, schema = UrlLogic.parser_url(full_url=str(rqt.url), endpoint=endpoint_with, name=given)
+
+		# step 1 - check and add cookie
+		process_cookie(rsp, cookie)
+
+		# step 2 - check url
+		url_is_good, check_msg = UrlLogic.check(url, schema)
+		if url_is_good is False:
+			return schm.ReportAdd(ok=False, msg=check_msg, request_url=str(rqt.url))
+
+		# step 3 - try to add
+		rlt = await Linker.add_redirect(code=given, link=url, cookie=cookie)
+		if rlt is not schm.LinkerReject.PASS:
+			return schm.ReportAdd(ok=False, msg=settings.MSG_REJECT, request_url=str(rqt.url))
+		return schm.ReportAdd(
+			ok=True,
+			msg='ok',
+			request_url=str(rqt.url),
+			target_url=url,
+			redirect_url=f'{host}{given}'
+		)
+
+	except Exception as e:
+		err_msg = settings.MSG_FAIL
+		logger.error(f"{err_msg} - {cookie}")
+		logger.error(e)
+		return schm.ReportAdd(ok=False, msg=err_msg, request_url=str(rqt.url))
 
 
 # http://localhost:8000/get/Xn87

@@ -14,7 +14,7 @@
 - Усложнения:
     - 🟥 нет 🔹 Написаны тесты (постарайтесь достичь покрытия в 70% и больше)
     - 🟩 да 🔹 Добавлена валидация URL с проверкой корректности ссылки
-    - 🟥 нет 🔹 Добавлена возможность задавать кастомные ссылки, чтобы пользователь мог сделать их человекочитаемыми - [http://bit.ly/avito-auto-be](http://bit.ly/avito-auto-be)
+    - 🟩 да 🔹 Добавлена возможность задавать кастомные ссылки, чтобы пользователь мог сделать их человекочитаемыми - [http://bit.ly/avito-auto-be](http://bit.ly/avito-auto-be)
     - 🟥 нет (использовал Redis as cache) 🔹 Проведено нагрузочное тестирование с целью понять, какую нагрузку на чтение может выдержать наш сервис
     - 🟩 да (digitalocean.com - https://s.42q.ru) 🔹 Если вдруг будет желание, можно слепить простой UI и выложить сервис на бесплатный хостинг - Google Cloud, AWS и подобные. 
 
@@ -60,7 +60,8 @@ For example a 🔸target_url🔸 is https://www.youtube.com/watch?v=dQw4w9WgXcQ
     {
       "ok":true,
       "msg":"ok",
-      "original_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "request_url":"http://127.0.0.1:8000/set/https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "target_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "redirect_url":"http://127.0.0.1:8000/DKJL"
     }
     ```
@@ -77,3 +78,16 @@ For example a 🔸target_url🔸 is https://www.youtube.com/watch?v=dQw4w9WgXcQ
    
   * For redirect with 🔸code🔸 do GET request like this http://127.0.0.1:8000/🔸code🔸
     * Ex.: http://127.0.0.1:8000/DKJL
+    
+  * To create short link with given 🔹code🔹 do GET request with your browser or curl like this http://127.0.0.1:8000/set_with/🔹code🔹/🔸target_url🔸  
+    * Ex.: http://127.0.0.1:8000/set_with/Rick/https://www.youtube.com/watch?v=dQw4w9WgXcQ  
+    * As response you will get something like this: 
+    ```json
+    {
+      "ok":true,
+      "msg":"ok",
+      "request_url":"http://127.0.0.1:8000/set_with/Rick/https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "target_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "redirect_url":"http://127.0.0.1:8000/Rick"
+    }
+    ```
