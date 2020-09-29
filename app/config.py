@@ -2,8 +2,9 @@ from pydantic import BaseSettings, RedisDsn
 
 
 class Settings(BaseSettings):
-	DEBUG:			bool
-	DEFAULT_SCHEMA: str
+	DEBUG:			bool = False
+	DEFAULT_SCHEMA: str = 'http://'
+	ENDPOINT_SET:	str = '/set/'
 	CODE_BASE:		str
 	CODE_LEN:		int
 	HOST:			str
