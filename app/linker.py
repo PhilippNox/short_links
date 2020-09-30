@@ -94,3 +94,11 @@ class Linker:
 			reject[rjc] = reject.get(rjc, 0) + 1
 		logger.warning(f"REJECT_LIM - {cookie} - {url}")
 		return False, None
+
+	@classmethod
+	async def switch_on_state(cls, code: str, turn_on: bool) -> bool:
+		db_out = await crud_rdir.update_on_state(code=code, turn_on=turn_on)
+		if db_out is False:
+			return False
+		await RdsOpr.raw().delete(code)
+		return True

@@ -38,3 +38,15 @@ async def get_redirect_by_code(code: str) -> Tuple[str, str]:
 	out = await database.fetch_one(query=query)
 	return out['link'], '1' if out['is_on'] else '0'
 
+
+async def update_on_state(code: str, turn_on: bool) -> bool:
+	try:
+		query = md.redirect.update()\
+			.where(md.redirect.c.code == code)\
+			.values(is_on=turn_on)\
+			.returning(md.redirect.c.code)
+		out = await database.execute(query)
+		return True if out is not None else False
+	except Exception as e:
+		logger.warning(f"update_on_state - {code} - Exception [{type(e)}]: {e}")
+		return False

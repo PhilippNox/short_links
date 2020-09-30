@@ -17,6 +17,10 @@ class ReportLink(BaseModel):
 	is_on:			Optional[str] = None
 
 
+class ReportSimple(BaseModel):
+	ok:				bool
+
+
 class InsetDB(Enum):
 	OK = auto()
 	UNC = auto()

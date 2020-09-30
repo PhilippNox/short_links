@@ -101,7 +101,7 @@ async def set_with(given: str, rqt: Request, rsp: Response, cookie: Optional[str
 async def get_info_link(code: str):
 	try:
 		redirect, src = await Linker.get_link_or_none(code)
-		logger.debug(f'Linker return - {redirect} - {src}')
+		logger.debug(f'Linker return - {code} - {redirect} - {src}')
 		if redirect is None:
 			return schm.ReportLink(ok=False)
 		return schm.ReportLink(ok=True, link=redirect['link'], is_on=redirect['is_on'])
@@ -116,7 +116,7 @@ async def get_info_link(code: str):
 async def get_link(code: str):
 	try:
 		redirect, src = await Linker.get_link_or_none(code)
-		logger.debug(f'Linker return - {redirect} - {src}')
+		logger.debug(f'Linker return - {code} - {redirect} - {src}')
 		if redirect is None:
 			return schm.ReportLink(ok=False)
 		if redirect['is_on'] is '0':
@@ -130,6 +130,26 @@ async def get_link(code: str):
 @app.get("/")  # todo add main page html
 async def simple():
 	return {'ok': True, 'msg': 'check readme file'}
+
+
+@app.get("/turn_on/{code}")
+async def turn_on(code: str):
+	try:
+		out = await Linker.switch_on_state(code=code, turn_on=True)
+		return schm.ReportSimple(ok=True) if out else schm.ReportSimple(ok=False)
+	except Exception as e:
+		logger.warning(f"turn_on - {code} - Exception [{type(e)}]: {e}")
+		return schm.ReportSimple(ok=False)
+
+
+@app.get("/turn_off/{code}")
+async def turn_on(code: str):
+	try:
+		out = await Linker.switch_on_state(code=code, turn_on=False)
+		return schm.ReportSimple(ok=True) if out else schm.ReportSimple(ok=False)
+	except Exception as e:
+		logger.warning(f"turn_on - {code} - Exception [{type(e)}]: {e}")
+		return schm.ReportSimple(ok=False)
 
 
 @app.on_event("startup")
