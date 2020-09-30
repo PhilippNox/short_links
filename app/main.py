@@ -98,7 +98,7 @@ async def set_with(given: str, rqt: Request, rsp: Response, cookie: Optional[str
 # http://localhost:8000/get/Xn87
 
 @app.get("/get/{code}")
-async def get_link(code: str):
+async def get_info_link(code: str):
 	try:
 		link, src = await Linker.get_link_or_none(code)
 		logger.debug(f'Linker return - {link} - {src}')
@@ -123,6 +123,11 @@ async def get_link(code: str):
 	except Exception as e:
 		logger.warning(f"get_link - {code} - Exception [{type(e)}]: {e}")
 		return schm.ReportLink(ok=False)
+
+
+@app.get("/")  # todo add main page html
+async def simple():
+	return {'ok': True, 'msg': 'check readme file'}
 
 
 @app.on_event("startup")

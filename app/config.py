@@ -1,9 +1,11 @@
 from pydantic import BaseSettings, RedisDsn
+from typing import List, Set
 
 
 class Settings(BaseSettings):
 	DEBUG:				bool = False
 	DEFAULT_SCHEMA: 	str = 'http://'
+	ALLOWED_SCHEMAS:	Set[str] = {'http://', 'https://'}
 	CODE_BASE:			str
 	CODE_LEN:			int
 	HOST:				str
