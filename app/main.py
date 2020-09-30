@@ -100,11 +100,11 @@ async def set_with(given: str, rqt: Request, rsp: Response, cookie: Optional[str
 @app.get("/get/{code}")
 async def get_info_link(code: str):
 	try:
-		link, src = await Linker.get_link_or_none(code)
-		logger.debug(f'Linker return - {link} - {src}')
-		if link is None:
+		redirect, src = await Linker.get_link_or_none(code)
+		logger.debug(f'Linker return - {redirect} - {src}')
+		if redirect is None:
 			return schm.ReportLink(ok=False)
-		return schm.ReportLink(ok=True, link=link)
+		return schm.ReportLink(ok=True, link=redirect['link'], is_on=redirect['is_on'])
 	except Exception as e:
 		logger.warning(f"get_link - {code} - Exception [{type(e)}]: {e}")
 		return schm.ReportLink(ok=False)
@@ -115,11 +115,13 @@ async def get_info_link(code: str):
 @app.get("/{code}")
 async def get_link(code: str):
 	try:
-		link, src = await Linker.get_link_or_none(code)
-		logger.debug(f'Linker return - {link} - {src}')
-		if link is None:
+		redirect, src = await Linker.get_link_or_none(code)
+		logger.debug(f'Linker return - {redirect} - {src}')
+		if redirect is None:
 			return schm.ReportLink(ok=False)
-		return RedirectResponse(link)
+		if redirect['is_on'] is '0':
+			return schm.ReportLink(ok=True, link=redirect['link'], is_on=redirect['is_on'])
+		return RedirectResponse(redirect['link'])
 	except Exception as e:
 		logger.warning(f"get_link - {code} - Exception [{type(e)}]: {e}")
 		return schm.ReportLink(ok=False)

@@ -14,6 +14,7 @@ class ReportAdd(BaseModel):
 class ReportLink(BaseModel):
 	ok: 			bool
 	link: 			Optional[str] = None
+	is_on:			Optional[str] = None
 
 
 class InsetDB(Enum):

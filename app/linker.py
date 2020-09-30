@@ -38,16 +38,18 @@ class Linker:
 	cache_ttl = settings.RDS_TTL_CACHE
 
 	@classmethod
-	async def get_link_or_none(cls, code: str) -> Tuple[Optional[str], schm.LinkerGetSrc]:
+	async def get_link_or_none(cls, code: str) -> Tuple[Optional[Dict[str, Any]], schm.LinkerGetSrc]:
 		if await cls.bag_nolink.has(code):
 			return None, schm.LinkerGetSrc.RDS
-		rds_val = await RdsOpr.raw().get(code)
-		if rds_val is not None:
+		rds_val = await RdsOpr.raw().hgetall(code)
+		if rds_val:
 			return rds_val, schm.LinkerGetSrc.RDS
 		try:
-			db_val = await crud_rdir.get_redirect_by_code(code)
-			await RdsOpr.raw().setex(code, cls.cache_ttl, db_val)
-			return db_val, schm.LinkerGetSrc.DB_OK
+			db_val, is_on = await crud_rdir.get_redirect_by_code(code)
+			data = {'link': db_val, 'is_on': is_on}  # todo - switch to pydantic model maybe
+			await RdsOpr.raw().hmset_dict(code, data)
+			await RdsOpr.raw().expire(code, cls.cache_ttl)
+			return data, schm.LinkerGetSrc.DB_OK
 		except TypeError as e:
 			await cls.bag_nolink.add(code)
 			return None, schm.LinkerGetSrc.DB_OK
@@ -74,7 +76,8 @@ class Linker:
 		if db is schm.InsetDB.OK:
 			await cls.bag_nolink.rem(code)
 			await cls.bag_reject.rem(code)
-			await RdsOpr.raw().setex(code, cls.cache_ttl, link)
+			await RdsOpr.raw().hmset_dict(code, {'link': link, 'is_on': '1'})
+			await RdsOpr.raw().expire(code, cls.cache_ttl)
 			return schm.LinkerReject.PASS
 		else:
 			await cls.bag_reject.add(code)
