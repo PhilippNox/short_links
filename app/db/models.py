@@ -11,5 +11,7 @@ redirect = sa.Table(
 	sa.Column('cookie', UUID),
 	sa.Column('code', sa.String(32), nullable=False, unique=True, index=True),
 	sa.Column('link', sa.String(2083), nullable=False),
-	sa.Column('how_created', JSONB)
+	sa.Column('how_created', JSONB),
+	sa.Column('is_on', sa.Boolean()),
+	sa.Column('who_switched', UUID),
 )
