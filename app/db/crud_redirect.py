@@ -4,7 +4,7 @@ import app.db.models as md
 import app.schemas as schm
 from app.db.core_db import database
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 import sqlalchemy as sa
 import asyncpg
 
@@ -32,8 +32,21 @@ async def create_redirect(
 		return schm.InsetDB.ERR
 
 
-async def get_redirect_by_code(code: str) -> str:
-	query = sa.select([md.redirect.c.link]).where(md.redirect.c.code == code)
+# not -> [str, bool] cause rds cant save bool in hash
+async def get_redirect_by_code(code: str) -> Tuple[str, str]:
+	query = sa.select([md.redirect.c.link, md.redirect.c.is_on]).where(md.redirect.c.code == code)
 	out = await database.fetch_one(query=query)
-	return out['link']
+	return out['link'], '1' if out['is_on'] else '0'
 
+
+async def update_on_state(code: str, turn_on: bool) -> bool:
+	try:
+		query = md.redirect.update()\
+			.where(md.redirect.c.code == code)\
+			.values(is_on=turn_on)\
+			.returning(md.redirect.c.code)
+		out = await database.execute(query)
+		return True if out is not None else False
+	except Exception as e:
+		logger.warning(f"update_on_state - {code} - Exception [{type(e)}]: {e}")
+		return False

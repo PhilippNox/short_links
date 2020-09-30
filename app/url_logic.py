@@ -14,7 +14,7 @@ class CheckUrl(BaseModel):
 class UrlLogic:
 
 	default_schema = settings.DEFAULT_SCHEMA
-	allowed_schemas = ['http://', 'https://', 'tg://', 'trello://']
+	allowed_schemas = settings.ALLOWED_SCHEMAS
 	re_schema = r'^[a-zA-Z]+:\/\/'
 
 	@classmethod
@@ -28,7 +28,6 @@ class UrlLogic:
 			schema = settings.DEFAULT_SCHEMA
 			trg = ''.join([settings.DEFAULT_SCHEMA, trg])
 		return trg, schema
-
 
 	@classmethod
 	def check(cls, url: str, schema: str) -> Tuple[bool, str]:
