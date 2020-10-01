@@ -119,7 +119,7 @@ async def get_link(code: str):
 		logger.debug(f'Linker return - {code} - {redirect} - {src}')
 		if redirect is None:
 			return schm.ReportLink(ok=False)
-		if redirect['is_on'] is '0':
+		if redirect['is_on'] == '0':
 			return schm.ReportLink(ok=True, link=redirect['link'], is_on=redirect['is_on'])
 		return RedirectResponse(redirect['link'])
 	except Exception as e:
