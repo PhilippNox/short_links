@@ -31,7 +31,7 @@ class UrlLogic:
 
 	@classmethod
 	def check(cls, url: str, schema: str) -> Tuple[bool, str]:
-		if schema not in cls.allowed_schemas:
+		if cls.allowed_schemas is not None and schema not in cls.allowed_schemas:
 			return False, f'Schema "{schema}" - is not allowed'
 		try:
 			CheckUrl(url=url)

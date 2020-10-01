@@ -91,3 +91,10 @@ For example a 🔸target_url🔸 is https://www.youtube.com/watch?v=dQw4w9WgXcQ
       "redirect_url":"http://127.0.0.1:8000/Rick"
     }
     ```
+   
+  * For turn off redirect for 🔸code🔸 do GET request like this http://127.0.0.1:8000/turn_off/🔸code🔸
+    * Ex.: http://127.0.0.1:8000/turn_off/DKJL
+    
+  * For turn on redirect for 🔸code🔸 do GET request like this http://127.0.0.1:8000/turn_on/🔸code🔸
+    * Ex.: http://127.0.0.1:8000/turn_on/DKJL
+    
